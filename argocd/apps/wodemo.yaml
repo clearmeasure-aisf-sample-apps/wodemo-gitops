@@ -1,0 +1,94 @@
+# Argo CD Applications of the wodemo demo: one per environment, each rendering wodemo/envs/<env>.
+# The image pins live only in wodemo/envs/<env>/kustomization.yaml (images[].newTag). Their writer is, in turn:
+#   - the GitHub Actions stand-in (.github/workflows/sync-tdd.yml and promote.yml) while repository variable PIN_WRITER=actions
+#   - Octopus Deploy (step "Update Argo CD image tags", .octopus/wodemo/) once PIN_WRITER=octopus
+# The argo.octopus.com annotations connect each Application to its Octopus project and environment.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wodemo-tdd
+  namespace: argocd
+  annotations:
+    argo.octopus.com/project: wodemo
+    argo.octopus.com/environment: wodemo-tdd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/clearmeasure-aisf-sample-apps/wodemo-gitops.git
+    targetRevision: main
+    path: wodemo/envs/tdd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wodemo-tdd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wodemo-uat
+  namespace: argocd
+  annotations:
+    argo.octopus.com/project: wodemo
+    argo.octopus.com/environment: wodemo-uat
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/clearmeasure-aisf-sample-apps/wodemo-gitops.git
+    targetRevision: main
+    path: wodemo/envs/uat
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wodemo-uat
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wodemo-prod
+  namespace: argocd
+  annotations:
+    argo.octopus.com/project: wodemo
+    argo.octopus.com/environment: wodemo-prod
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/clearmeasure-aisf-sample-apps/wodemo-gitops.git
+    targetRevision: main
+    path: wodemo/envs/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wodemo-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

@@ -1,0 +1,61 @@
+# PreSync hook, wave 1: migrates the environment's database with the db-migrator image of the pinned release, before the
+# new pods roll out. A failing migration fails the sync, and the old pods keep serving.
+# Console arguments: update <server> <database> /app/scripts <user> <password>.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  labels:
+    app.kubernetes.io/name: db-migrate
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db-migrate
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/db-migrator
+          args:
+            - update
+            - sql-localhost
+            - $(DB_NAME)
+            - /app/scripts
+            - sa
+            - $(DB_ADMIN_PASSWORD)
+          env:
+            - name: MIGRATION_DB_READY_TIMEOUT_SECONDS
+              value: "300"
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: wodemo-config
+                  key: DB_NAME
+            - name: DB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-admin
+                  key: password
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 384Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

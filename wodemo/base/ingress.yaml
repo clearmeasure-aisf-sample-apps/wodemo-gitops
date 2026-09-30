@@ -1,0 +1,20 @@
+# HTTP ingress through the demo's ingress-nginx. The host is set per environment (sslip.io name of the load balancer IP).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ui-server
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 16m
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: placeholder.invalid
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ui-server
+                port:
+                  name: http

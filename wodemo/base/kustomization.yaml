@@ -1,0 +1,16 @@
+# Base of the wodemo app, shared by tdd, uat and prod. Images carry no tag here; the tags are pinned only in
+# envs/<env>/kustomization.yaml.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: wodemo
+    includeSelectors: false
+    includeTemplates: true
+resources:
+  - db-alias.yaml
+  - db-init.yaml
+  - migrate.yaml
+  - ui-server.yaml
+  - worker.yaml
+  - ingress.yaml

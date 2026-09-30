@@ -1,0 +1,38 @@
+# Pin writer stand-in, step 1: follows the latest release of wodemo-app and pins tdd to it. It polls (no secret is
+# needed, because both repositories are public) instead of being called by the app repository.
+# Active only while repository variable PIN_WRITER = actions; when Octopus Deploy takes over, set it to octopus.
+name: sync-tdd
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pins
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: vars.PIN_WRITER == 'actions'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin tdd to the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$(gh api repos/${GITHUB_REPOSITORY_OWNER}/wodemo-app/releases/latest --jq .tag_name)"
+          version="${tag#v}"
+          current="$(grep -m1 'newTag:' wodemo/envs/tdd/kustomization.yaml | sed -E 's/.*"([^"]*)".*/\1/')"
+          echo "latest release ${version}, tdd pinned to ${current}"
+          if [ "${version}" = "${current}" ]; then echo "nothing to do"; exit 0; fi
+          scripts/set-pin.sh tdd "${version}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Pin wodemo ${version} in tdd (sync-tdd run ${GITHUB_RUN_ID})"
+          git push

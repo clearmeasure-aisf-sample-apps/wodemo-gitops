@@ -1,0 +1,33 @@
+# Slim Argo CD for the wodemo demo (chart argo/argo-cd 10.9.5). Reached through `kubectl port-forward svc/argocd-server`.
+configs:
+  params:
+    server.insecure: true
+dex:
+  enabled: false
+notifications:
+  enabled: false
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+server:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+repoServer:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+applicationSet:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+redis:
+  resources:
+    requests:
+      cpu: 20m
+      memory: 32Mi

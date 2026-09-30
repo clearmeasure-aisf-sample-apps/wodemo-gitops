@@ -1,0 +1,50 @@
+# Pin writer stand-in, step 2: promotes the version pinned in the previous environment (uat from tdd, prod from uat),
+# or an explicit version. The GitHub environment of the same name can require a reviewer (prod does).
+# Active only while repository variable PIN_WRITER = actions.
+name: promote
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options: [uat, prod]
+      version:
+        description: Release version (empty = the version pinned in the previous environment)
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pins
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: vars.PIN_WRITER == 'actions'
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin the target environment
+        env:
+          TARGET: ${{ inputs.environment }}
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          source_env=tdd; [ "${TARGET}" = "prod" ] && source_env=uat
+          version="${REQUESTED}"
+          if [ -z "${version}" ]; then
+            version="$(grep -m1 'newTag:' "wodemo/envs/${source_env}/kustomization.yaml" | sed -E 's/.*"([^"]*)".*/\1/')"
+          fi
+          scripts/set-pin.sh "${TARGET}" "${version}"
+          if git diff --quiet; then echo "already pinned"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Pin wodemo ${version} in ${TARGET} (promote run ${GITHUB_RUN_ID})"
+          git push

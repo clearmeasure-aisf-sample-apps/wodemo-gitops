@@ -1,0 +1,11 @@
+# Name under which the db-migrator reaches the shared SQL Server. The DbUp console validates the server certificate of
+# every server whose name does not contain "localhost" (src/Database/Console/DatabaseConnectionStringBuilder.cs); this
+# demo's SQL Server uses its self-signed certificate, so the alias name contains "localhost". A real environment would
+# install a certificate from a trusted CA and use the real name.
+apiVersion: v1
+kind: Service
+metadata:
+  name: sql-localhost
+spec:
+  type: ExternalName
+  externalName: mssql.wodemo-data.svc.cluster.local

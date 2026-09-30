@@ -1,0 +1,27 @@
+# Renders every kustomization so that a broken manifest never reaches Argo CD.
+name: validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  kustomize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build every overlay
+        run: |
+          set -euo pipefail
+          for dir in data/sqlserver wodemo/envs/tdd wodemo/envs/uat wodemo/envs/prod; do
+            echo "== kustomize build ${dir}"
+            kubectl kustomize "${dir}" > /dev/null
+          done
+      - name: Pins are release versions or the bootstrap placeholder
+        run: |
+          set -euo pipefail
+          bad="$(grep -hE '^    newTag:' wodemo/envs/*/kustomization.yaml | grep -vE 'newTag: "([0-9]+\.[0-9]+\.[0-9]+|0\.0\.0-bootstrap)"' || true)"
+          if [ -n "${bad}" ]; then echo "unexpected pins:"; echo "${bad}"; exit 1; fi

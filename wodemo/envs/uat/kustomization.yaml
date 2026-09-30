@@ -1,0 +1,30 @@
+# wodemo in uat. The three image tags below are the pins: written only by the pin writer (see README, "Who writes pins"),
+# never by hand. The ingress host is set by scripts/bootstrap-cluster.ps1 to the sslip.io name of the load balancer IP.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wodemo-uat
+resources:
+  - ../../base
+images:
+  - name: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/ui-server
+    newTag: "0.0.0-bootstrap"
+  - name: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/worker
+    newTag: "0.0.0-bootstrap"
+  - name: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/db-migrator
+    newTag: "0.0.0-bootstrap"
+configMapGenerator:
+  - name: wodemo-config
+    literals:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - DB_NAME=wodemo_uat
+      - RemotableBus__ApiUrl=http://ui-server.wodemo-uat.svc.cluster.local:8080/api/blazor-wasm-single-api
+      - ApiKeyAuthentication__Enabled=false
+patches:
+  - target:
+      kind: Ingress
+      name: ui-server
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: wodemo-uat.INGRESS_IP.sslip.io

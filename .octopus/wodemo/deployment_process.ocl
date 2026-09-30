@@ -1,0 +1,73 @@
+step "prod-go-no-go" {
+    name = "Prod go/no-go"
+
+    action {
+        action_type = "Octopus.Manual"
+        is_required = true
+        environments = ["wodemo-prod"]
+        properties = {
+            Octopus.Action.Manual.BlockConcurrentDeployments = "False"
+            Octopus.Action.Manual.Instructions = <<-EOT
+                ## Prod go/no-go for release #{Octopus.Release.Number}
+                Proceed when the release has run in UAT and the release notes match what is announced.
+                Write the reason for your decision in **Notes**. The next step commits the image tags; Argo CD then
+                migrates the database (PreSync hook) and rolls the pods out.
+                    EOT
+            Octopus.Action.Manual.ResponsibleTeamIds = "teams-managers"
+            Octopus.Action.RunOnServer = "false"
+        }
+    }
+}
+
+step "update-argo-cd-image-tags" {
+    name = "Update Argo CD image tags"
+
+    action {
+        action_type = "Octopus.ArgoCDUpdateImageTags"
+        is_required = true
+        worker_pool = "hosted-ubuntu"
+        environments = ["wodemo-tdd", "wodemo-uat", "wodemo-prod"]
+        properties = {
+            Octopus.Action.ArgoCD.CommitMethod = "DirectCommit"
+            Octopus.Action.ArgoCD.CommitMessageSummary = "Pin #{Octopus.Project.Name} #{Octopus.Release.Number} in #{Octopus.Environment.Name} (#{Octopus.Deployment.Id})"
+            Octopus.Action.ArgoCD.StepVerification.Method = "ArgoCDApplicationHealthy"
+            Octopus.Action.ArgoCD.StepVerification.Timeout = "#{Argo.VerificationTimeoutSeconds}"
+            Octopus.Action.ArgoCD.Sync.Mode = "Disabled"
+            Octopus.Action.AutoRetry.MaximumCount = "1"
+            Octopus.Action.AutoRetry.MinimumBackoff = "15"
+        }
+
+        packages "ui-server" {
+            acquisition_location = "NotAcquired"
+            feed = "ghcr-wodemo"
+            package_id = "clearmeasure-aisf-sample-apps/wodemo/ui-server"
+            properties = {
+                Extract = "False"
+                Purpose = "DockerImageReference"
+                SelectionMode = "immediate"
+            }
+        }
+
+        packages "worker" {
+            acquisition_location = "NotAcquired"
+            feed = "ghcr-wodemo"
+            package_id = "clearmeasure-aisf-sample-apps/wodemo/worker"
+            properties = {
+                Extract = "False"
+                Purpose = "DockerImageReference"
+                SelectionMode = "immediate"
+            }
+        }
+
+        packages "db-migrator" {
+            acquisition_location = "NotAcquired"
+            feed = "ghcr-wodemo"
+            package_id = "clearmeasure-aisf-sample-apps/wodemo/db-migrator"
+            properties = {
+                Extract = "False"
+                Purpose = "DockerImageReference"
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}

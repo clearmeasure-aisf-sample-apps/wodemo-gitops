@@ -1,0 +1,78 @@
+# PreSync hook, wave 0: creates this environment's database and its application login on the shared SQL Server.
+# Idempotent. Secrets (created by scripts/bootstrap-cluster.ps1, never in Git):
+#   db-admin  key password  the sa password
+#   db-app    keys username, password  the application login of this environment
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init
+  labels:
+    app.kubernetes.io/name: db-init
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db-init
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: init
+          image: mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04
+          env:
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: wodemo-config
+                  key: DB_NAME
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-admin
+                  key: password
+            - name: APP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-app
+                  key: username
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-app
+                  key: password
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -uo pipefail
+              SQLCMD="/opt/mssql-tools18/bin/sqlcmd -C -S mssql.wodemo-data.svc.cluster.local -U sa -b"
+              export SQLCMDPASSWORD="${SA_PASSWORD}"
+              for i in $(seq 1 60); do
+                $SQLCMD -Q "SELECT 1" >/dev/null 2>&1 && break
+                echo "waiting for SQL Server ($i)"; sleep 10
+              done
+              $SQLCMD -Q "IF DB_ID(N'${DB_NAME}') IS NULL CREATE DATABASE [${DB_NAME}];" || exit 1
+              $SQLCMD -Q "IF SUSER_ID(N'${APP_USER}') IS NULL CREATE LOGIN [${APP_USER}] WITH PASSWORD = N'${APP_PASSWORD}', CHECK_POLICY = OFF; ALTER LOGIN [${APP_USER}] WITH PASSWORD = N'${APP_PASSWORD}';" || exit 1
+              $SQLCMD -d "${DB_NAME}" -Q "IF USER_ID(N'${APP_USER}') IS NULL CREATE USER [${APP_USER}] FOR LOGIN [${APP_USER}]; ALTER ROLE db_owner ADD MEMBER [${APP_USER}];" || exit 1
+              echo "database ${DB_NAME} and login ${APP_USER} ready"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
