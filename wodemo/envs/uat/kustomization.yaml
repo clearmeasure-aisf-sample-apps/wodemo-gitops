@@ -6,11 +6,11 @@ namespace: wodemo-uat
 resources:
   - ../../base
 images:
-  - name: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/ui-server
+  - name: acrwodemoce304.azurecr.io/wodemo/ui-server
     newTag: "0.0.0-bootstrap"
-  - name: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/worker
+  - name: acrwodemoce304.azurecr.io/wodemo/worker
     newTag: "0.0.0-bootstrap"
-  - name: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/db-migrator
+  - name: acrwodemoce304.azurecr.io/wodemo/db-migrator
     newTag: "0.0.0-bootstrap"
 configMapGenerator:
   - name: wodemo-config

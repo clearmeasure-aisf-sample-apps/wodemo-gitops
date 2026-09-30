@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: migrate
-          image: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/db-migrator
+          image: acrwodemoce304.azurecr.io/wodemo/db-migrator
           args:
             - update
             - sql-localhost

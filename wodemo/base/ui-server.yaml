@@ -35,7 +35,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: ui-server
-          image: ghcr.io/clearmeasure-aisf-sample-apps/wodemo/ui-server
+          image: acrwodemoce304.azurecr.io/wodemo/ui-server
           ports:
             - name: http
               containerPort: 8080

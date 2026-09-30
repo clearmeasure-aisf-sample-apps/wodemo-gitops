@@ -9,7 +9,7 @@ three environments (tdd, uat, prod) as namespaces.
 wodemo-app (GitHub Actions)            wodemo-gitops (this repo)                 cluster aks-wodemo
   push to main                          wodemo/envs/<env>/kustomization.yaml       Argo CD  ->  wodemo-<env>
    -> ci (build, test)                    images[].newTag = the pins                 PreSync: db-init, db-migrate
-   -> release: 3 images to GHCR,         argocd/apps/*  Applications                 then ui-server + worker
+   -> release: 3 images to ACR,         argocd/apps/*  Applications                 then ui-server + worker
       cosign-signed, GitHub release v<n>  data/sqlserver  shared SQL Server         ingress-nginx, sslip.io hosts
                  \___ pin writer ________/  .octopus/wodemo  Octopus project as code
 ```
@@ -66,5 +66,5 @@ terraform init && terraform apply -var "space_id=<space>"
 ```
 
 Then install the Octopus Argo CD gateway in the cluster (chart `octopus-argocd-gateway-chart`, registration token from
-Octopus), register the cluster's Argo CD, create a release of `wodemo` from the latest GHCR images, and set the
+Octopus), register the cluster's Argo CD, create a release of `wodemo` from the latest ACR images, and set the
 repository variable `PIN_WRITER` to `octopus`.

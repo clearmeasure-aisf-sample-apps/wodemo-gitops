@@ -39,8 +39,8 @@ step "update-argo-cd-image-tags" {
 
         packages "ui-server" {
             acquisition_location = "NotAcquired"
-            feed = "ghcr-wodemo"
-            package_id = "clearmeasure-aisf-sample-apps/wodemo/ui-server"
+            feed = "acr-wodemo"
+            package_id = "wodemo/ui-server"
             properties = {
                 Extract = "False"
                 Purpose = "DockerImageReference"
@@ -50,8 +50,8 @@ step "update-argo-cd-image-tags" {
 
         packages "worker" {
             acquisition_location = "NotAcquired"
-            feed = "ghcr-wodemo"
-            package_id = "clearmeasure-aisf-sample-apps/wodemo/worker"
+            feed = "acr-wodemo"
+            package_id = "wodemo/worker"
             properties = {
                 Extract = "False"
                 Purpose = "DockerImageReference"
@@ -61,8 +61,8 @@ step "update-argo-cd-image-tags" {
 
         packages "db-migrator" {
             acquisition_location = "NotAcquired"
-            feed = "ghcr-wodemo"
-            package_id = "clearmeasure-aisf-sample-apps/wodemo/db-migrator"
+            feed = "acr-wodemo"
+            package_id = "wodemo/db-migrator"
             properties = {
                 Extract = "False"
                 Purpose = "DockerImageReference"

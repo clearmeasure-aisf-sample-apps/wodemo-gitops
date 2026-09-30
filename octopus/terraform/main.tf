@@ -77,11 +77,26 @@ resource "octopusdeploy_project_group" "wodemo" {
   description = "The wodemo demo app (GitHub Actions CI, Argo CD)"
 }
 
-# Images are published to GHCR by the release workflow of wodemo-app; the repository is public, so the feed is anonymous.
-resource "octopusdeploy_docker_container_registry" "ghcr" {
-  name                           = "ghcr-wodemo"
-  feed_uri                       = "https://ghcr.io"
+# Images are published to the Azure Container Registry by the release workflow of wodemo-app (repositories wodemo/<image>).
+# Octopus reads the versions with a pull-scoped credential of your own (for example an ACR repository-scoped token with
+# content/read); it is passed as a sensitive variable and never stored in Git.
+variable "acr_username" {
+  type        = string
+  description = "Username of a pull-scoped ACR token"
+}
+
+variable "acr_password" {
+  type        = string
+  sensitive   = true
+  description = "Password of that token"
+}
+
+resource "octopusdeploy_docker_container_registry" "acr" {
+  name                           = "acr-wodemo"
+  feed_uri                       = "https://acrwodemoce304.azurecr.io"
   api_version                    = "v2"
+  username                       = var.acr_username
+  password                       = var.acr_password
   download_attempts              = 3
   download_retry_backoff_seconds = 10
 }
