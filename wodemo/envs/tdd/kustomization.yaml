@@ -7,11 +7,11 @@ resources:
   - ../../base
 images:
   - name: acrwodemoce304.azurecr.io/wodemo/ui-server
-    newTag: "0.0.0-bootstrap"
+    newTag: "1.0.3"
   - name: acrwodemoce304.azurecr.io/wodemo/worker
-    newTag: "0.0.0-bootstrap"
+    newTag: "1.0.3"
   - name: acrwodemoce304.azurecr.io/wodemo/db-migrator
-    newTag: "0.0.0-bootstrap"
+    newTag: "1.0.3"
 configMapGenerator:
   - name: wodemo-config
     literals:
