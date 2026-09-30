@@ -1,4 +1,4 @@
-# PreSync hook, wave 1: migrates the environment's database with the db-migrator image of the pinned release, before the
+# Sync hook, wave 1 (before the Deployments at wave 2): migrates the environment's database with the db-migrator image of the pinned release, before the
 # new pods roll out. A failing migration fails the sync, and the old pods keep serving.
 # Console arguments: update <server> <database> /app/scripts <user> <password>.
 apiVersion: batch/v1
@@ -8,7 +8,7 @@ metadata:
   labels:
     app.kubernetes.io/name: db-migrate
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
     argocd.argoproj.io/sync-wave: "1"
 spec:

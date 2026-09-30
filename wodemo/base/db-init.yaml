@@ -1,4 +1,4 @@
-# PreSync hook, wave 0: creates this environment's database and its application login on the shared SQL Server.
+# Sync hook, wave 0 (after the ConfigMap at wave -1): creates this environment's database and its application login on the shared SQL Server.
 # Idempotent. Secrets (created by scripts/bootstrap-cluster.ps1, never in Git):
 #   db-admin  key password  the sa password
 #   db-app    keys username, password  the application login of this environment
@@ -9,7 +9,7 @@ metadata:
   labels:
     app.kubernetes.io/name: db-init
   annotations:
-    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook: Sync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
     argocd.argoproj.io/sync-wave: "0"
 spec:

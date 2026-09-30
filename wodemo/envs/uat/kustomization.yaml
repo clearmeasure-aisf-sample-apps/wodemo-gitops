@@ -14,6 +14,9 @@ images:
     newTag: "0.0.0-bootstrap"
 configMapGenerator:
   - name: wodemo-config
+    options:
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
     literals:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
