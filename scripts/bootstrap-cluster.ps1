@@ -52,8 +52,10 @@ function Get-SecretValue([string]$Namespace, [string]$Name, [string]$Key) {
 function Set-SecretIfMissing([string]$Namespace, [string]$Name, [hashtable]$Data) {
     & kubectl --kubeconfig $Kubeconfig -n $Namespace get secret $Name *> $null
     if ($LASTEXITCODE -eq 0) { Write-Host "secret $Namespace/$Name exists"; return }
-    $literals = $Data.GetEnumerator() | ForEach-Object { "--from-literal=$($_.Key)=$($_.Value)" }
-    Invoke-Kubectl -n $Namespace create secret generic $Name @literals | Out-Null
+    [string[]]$literals = @($Data.GetEnumerator() | ForEach-Object { "--from-literal=$($_.Key)=$($_.Value)" })
+    # Do not route this through Invoke-Kubectl: a failure message would echo the password.
+    & kubectl --kubeconfig $Kubeconfig -n $Namespace create secret generic $Name @literals | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "creating secret $Namespace/$Name failed" }
     Write-Host "secret $Namespace/$Name created"
 }
 
