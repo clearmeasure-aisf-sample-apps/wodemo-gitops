@@ -47,4 +47,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -am "Pin wodemo ${version} in ${TARGET} (promote run ${GITHUB_RUN_ID})"
-          git push
+          for attempt in 1 2 3; do git pull --rebase -q origin main && git push && break; sleep $((attempt * 5)); done
