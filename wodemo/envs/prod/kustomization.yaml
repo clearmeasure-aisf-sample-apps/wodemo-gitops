@@ -27,7 +27,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/rules/0/host
-        value: wodemo-prod.INGRESS_IP.sslip.io
+        value: wodemo-prod.20.118.117.185.sslip.io
   - target:
       kind: Deployment
       name: ui-server

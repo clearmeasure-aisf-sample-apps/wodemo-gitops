@@ -27,4 +27,4 @@ patches:
     patch: |-
       - op: replace
         path: /spec/rules/0/host
-        value: wodemo-tdd.INGRESS_IP.sslip.io
+        value: wodemo-tdd.20.118.117.185.sslip.io
