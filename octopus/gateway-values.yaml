@@ -1,0 +1,34 @@
+# Values of the Octopus Argo CD gateway for the wodemo demo cluster (chart octopus-argocd-gateway-chart 2.1.0, from
+# oci://registry-1.docker.io/octopusdeploy). Adapted from the values that run on the platform's clusters; applied by
+# scripts/install-octopus-gateway.ps1. The two Secrets it names are created by that script, never stored in Git:
+#   argocd-octopus-token          the API token of the read-only Argo CD account `octopus` (created at bootstrap)
+#   octopus-gateway-registration  a temporary Octopus API key, used once to register the gateway
+gateway:
+  argocd:
+    serverGrpcUrl: argocd-server.argocd.svc.cluster.local:443
+    insecure: true
+    plaintext: true
+    authenticationTokenSecretName: argocd-octopus-token
+    authenticationTokenSecretKey: token
+  octopus:
+    # gRPC endpoint of Octopus Cloud (port 8443, not the web URL).
+    serverGrpcUrl: clearmeasure.octopus.app:8443
+registration:
+  register: true
+  octopus:
+    name: argocd-wodemo
+    serverApiUrl: https://clearmeasure.octopus.app
+    spaceId: Spaces-335
+    # Environment slugs of the Octopus environments wodemo-tdd, wodemo-uat and wodemo-prod.
+    environments:
+      - wodemo-tdd
+      - wodemo-uat
+      - wodemo-prod
+    serverAccessTokenSecretName: octopus-gateway-registration
+    serverAccessTokenSecretKey: token
+  argocd:
+    # Argo CD is reached with kubectl port-forward in this demo.
+    webUiUrl: http://localhost:8080
+# The chart's default CronJob would upgrade the release with Helm; the demo manages it by hand.
+autoUpdate:
+  enabled: false
